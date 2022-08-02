@@ -42,10 +42,11 @@ def find_files_recursively(items, conf):
 
 
 def supports_color():
-    supported_platform = not (platform.system() == 'Windows' and not
-                              ('ANSICON' in os.environ or
-                               ('TERM' in os.environ and
-                                os.environ['TERM'] == 'ANSI')))
+    supported_platform = platform.system() != 'Windows' or (
+        'ANSICON' in os.environ
+        or ('TERM' in os.environ and os.environ['TERM'] == 'ANSI')
+    )
+
     return (supported_platform and
             hasattr(sys.stdout, 'isatty') and sys.stdout.isatty())
 
@@ -68,7 +69,7 @@ class Format(object):
         line += max(21 - len(line), 0) * ' '
         line += problem.desc
         if problem.rule:
-            line += '  (%s)' % problem.rule
+            line += f'  ({problem.rule})'
         return line
 
     @staticmethod
@@ -89,12 +90,12 @@ class Format(object):
     def github(problem, filename):
         line = '::'
         line += problem.level
-        line += ' file=' + filename + ','
-        line += 'line=' + format(problem.line) + ','
-        line += 'col=' + format(problem.column)
+        line += f' file={filename},'
+        line += f'line={format(problem.line)},'
+        line += f'col={format(problem.column)}'
         line += '::'
         if problem.rule:
-            line += '[' + problem.rule + '] '
+            line += f'[{problem.rule}] '
         line += problem.desc
         return line
 
@@ -158,8 +159,13 @@ def run(argv=None):
     parser.add_argument('--no-warnings',
                         action='store_true',
                         help='output only error level problems')
-    parser.add_argument('-v', '--version', action='version',
-                        version='{} {}'.format(APP_NAME, APP_VERSION))
+    parser.add_argument(
+        '-v',
+        '--version',
+        action='version',
+        version=f'{APP_NAME} {APP_VERSION}',
+    )
+
 
     args = parser.parse_args(argv)
 
@@ -176,7 +182,7 @@ def run(argv=None):
     try:
         if args.config_data is not None:
             if args.config_data != '' and ':' not in args.config_data:
-                args.config_data = 'extends: ' + args.config_data
+                args.config_data = f'extends: {args.config_data}'
             conf = YamlLintConfig(content=args.config_data)
         elif args.config_file is not None:
             conf = YamlLintConfig(file=args.config_file)

@@ -26,10 +26,7 @@ from yamllint import linter
 
 class RuleTestCase(unittest.TestCase):
     def build_fake_config(self, conf):
-        if conf is None:
-            conf = {}
-        else:
-            conf = yaml.safe_load(conf)
+        conf = {} if conf is None else yaml.safe_load(conf)
         conf = {'extends': 'default',
                 'rules': conf}
         return YamlLintConfig(yaml.safe_dump(conf))
@@ -39,10 +36,7 @@ class RuleTestCase(unittest.TestCase):
         for key in kwargs:
             assert key.startswith('problem')
             if len(kwargs[key]) > 2:
-                if kwargs[key][2] == 'syntax':
-                    rule_id = None
-                else:
-                    rule_id = kwargs[key][2]
+                rule_id = None if kwargs[key][2] == 'syntax' else kwargs[key][2]
             else:
                 rule_id = self.rule_id
             expected_problems.append(linter.LintProblem(

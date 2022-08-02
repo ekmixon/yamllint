@@ -95,12 +95,12 @@ DEFAULT = {'present': True}
 
 def check(conf, token, prev, next, nextnext, context):
     if conf['present']:
-        is_stream_end = isinstance(token, yaml.StreamEndToken)
         is_start = isinstance(token, yaml.DocumentStartToken)
         prev_is_end_or_stream_start = isinstance(
             prev, (yaml.DocumentEndToken, yaml.StreamStartToken)
         )
 
+        is_stream_end = isinstance(token, yaml.StreamEndToken)
         if is_stream_end and not prev_is_end_or_stream_start:
             yield LintProblem(token.start_mark.line, 1,
                               'missing document end "..."')
@@ -108,8 +108,7 @@ def check(conf, token, prev, next, nextnext, context):
             yield LintProblem(token.start_mark.line + 1, 1,
                               'missing document end "..."')
 
-    else:
-        if isinstance(token, yaml.DocumentEndToken):
-            yield LintProblem(token.start_mark.line + 1,
-                              token.start_mark.column + 1,
-                              'found forbidden document end "..."')
+    elif isinstance(token, yaml.DocumentEndToken):
+        yield LintProblem(token.start_mark.line + 1,
+                          token.start_mark.column + 1,
+                          'found forbidden document end "..."')

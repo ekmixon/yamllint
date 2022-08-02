@@ -94,24 +94,28 @@ def check(conf, token, prev, next, nextnext, context):
     if prev and isinstance(prev, yaml.tokens.TagToken):
         return
 
-    if conf['forbid-implicit-octal']:
-        if isinstance(token, yaml.tokens.ScalarToken):
-            if not token.style:
-                val = token.value
-                if (val.isdigit() and len(val) > 1 and val[0] == '0' and
-                        _is_octal_number(val[1:])):
-                    yield LintProblem(
-                        token.start_mark.line + 1, token.end_mark.column + 1,
-                        'forbidden implicit octal value "%s"' %
-                        token.value)
+    if (
+        conf['forbid-implicit-octal']
+        and isinstance(token, yaml.tokens.ScalarToken)
+        and not token.style
+    ):
+        val = token.value
+        if (val.isdigit() and len(val) > 1 and val[0] == '0' and
+                _is_octal_number(val[1:])):
+            yield LintProblem(
+                token.start_mark.line + 1, token.end_mark.column + 1,
+                'forbidden implicit octal value "%s"' %
+                token.value)
 
-    if conf['forbid-explicit-octal']:
-        if isinstance(token, yaml.tokens.ScalarToken):
-            if not token.style:
-                val = token.value
-                if (len(val) > 2 and val[:2] == '0o' and
-                        _is_octal_number(val[2:])):
-                    yield LintProblem(
-                        token.start_mark.line + 1, token.end_mark.column + 1,
-                        'forbidden explicit octal value "%s"' %
-                        token.value)
+    if (
+        conf['forbid-explicit-octal']
+        and isinstance(token, yaml.tokens.ScalarToken)
+        and not token.style
+    ):
+        val = token.value
+        if (len(val) > 2 and val[:2] == '0o' and
+                _is_octal_number(val[2:])):
+            yield LintProblem(
+                token.start_mark.line + 1, token.end_mark.column + 1,
+                'forbidden explicit octal value "%s"' %
+                token.value)

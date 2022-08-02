@@ -448,7 +448,7 @@ class CommandLineTestCase(unittest.TestCase):
     def test_run_multiple_files(self):
         items = [os.path.join(self.wd, 'empty.yml'),
                  os.path.join(self.wd, 's')]
-        path = items[1] + '/s/s/s/s/s/s/s/s/s/s/s/s/s/s/file.yaml'
+        path = f'{items[1]}/s/s/s/s/s/s/s/s/s/s/s/s/s/s/file.yaml'
 
         with RunContext(self) as ctx:
             cli.run(['-f', 'parsable'] + items)

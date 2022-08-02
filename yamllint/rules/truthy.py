@@ -149,10 +149,11 @@ def check(conf, token, prev, next, nextnext, context):
             isinstance(token, yaml.tokens.ScalarToken)):
         return
 
-    if isinstance(token, yaml.tokens.ScalarToken):
-        if (token.value in (set(TRUTHY) - set(conf['allowed-values'])) and
-                token.style is None):
-            yield LintProblem(token.start_mark.line + 1,
-                              token.start_mark.column + 1,
-                              "truthy value should be one of [" +
-                              ", ".join(sorted(conf['allowed-values'])) + "]")
+    if isinstance(token, yaml.tokens.ScalarToken) and (
+        token.value in (set(TRUTHY) - set(conf['allowed-values']))
+        and token.style is None
+    ):
+        yield LintProblem(token.start_mark.line + 1,
+                          token.start_mark.column + 1,
+                          "truthy value should be one of [" +
+                          ", ".join(sorted(conf['allowed-values'])) + "]")

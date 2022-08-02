@@ -348,9 +348,7 @@ def _check(conf, token, prev, next, nextnext, context):
 
     if (isinstance(token, yaml.ScalarToken) and
             conf['check-multi-line-strings']):
-        for problem in check_scalar_indentation(conf, token, context):
-            yield problem
-
+        yield from check_scalar_indentation(conf, token, context)
     # Step 2.a:
 
     if is_visible:
@@ -455,10 +453,11 @@ def _check(conf, token, prev, next, nextnext, context):
         # and:
         #     key: !!tag
         #       value
-        if isinstance(next, (yaml.AnchorToken, yaml.TagToken)):
-            if (next.start_mark.line == prev.start_mark.line and
-                    next.start_mark.line < nextnext.start_mark.line):
-                next = nextnext
+        if isinstance(next, (yaml.AnchorToken, yaml.TagToken)) and (
+            next.start_mark.line == prev.start_mark.line
+            and next.start_mark.line < nextnext.start_mark.line
+        ):
+            next = nextnext
 
         # Only if value is not empty
         if not isinstance(next, (yaml.BlockEndToken,
@@ -577,8 +576,7 @@ def _check(conf, token, prev, next, nextnext, context):
 
 def check(conf, token, prev, next, nextnext, context):
     try:
-        for problem in _check(conf, token, prev, next, nextnext, context):
-            yield problem
+        yield from _check(conf, token, prev, next, nextnext, context)
     except AssertionError:
         yield LintProblem(token.start_mark.line + 1,
                           token.start_mark.column + 1,

@@ -94,8 +94,7 @@ def check(conf, token, prev, next, nextnext, context):
             yield LintProblem(token.start_mark.line + 1, 1,
                               'missing document start "---"')
 
-    else:
-        if isinstance(token, yaml.DocumentStartToken):
-            yield LintProblem(token.start_mark.line + 1,
-                              token.start_mark.column + 1,
-                              'found forbidden document start "---"')
+    elif isinstance(token, yaml.DocumentStartToken):
+        yield LintProblem(token.start_mark.line + 1,
+                          token.start_mark.column + 1,
+                          'found forbidden document start "---"')

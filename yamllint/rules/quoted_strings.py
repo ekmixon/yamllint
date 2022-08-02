@@ -134,10 +134,11 @@ DEFAULT = {'quote-type': 'any',
 
 
 def VALIDATE(conf):
-    if conf['required'] is True and len(conf['extra-allowed']) > 0:
-        return 'cannot use both "required: true" and "extra-allowed"'
-    if conf['required'] is True and len(conf['extra-required']) > 0:
-        return 'cannot use both "required: true" and "extra-required"'
+    if conf['required'] is True:
+        if len(conf['extra-allowed']) > 0:
+            return 'cannot use both "required: true" and "extra-allowed"'
+        if len(conf['extra-required']) > 0:
+            return 'cannot use both "required: true" and "extra-required"'
     if conf['required'] is False and len(conf['extra-allowed']) > 0:
         return 'cannot use both "required: false" and "extra-allowed"'
 
@@ -163,17 +164,20 @@ def _quote_match(quote_type, token_style):
 
 
 def _quotes_are_needed(string):
-    loader = yaml.BaseLoader('key: ' + string)
+    loader = yaml.BaseLoader(f'key: {string}')
     # Remove the 5 first tokens corresponding to 'key: ' (StreamStartToken,
     # BlockMappingStartToken, KeyToken, ScalarToken(value=key), ValueToken)
     for _ in range(5):
         loader.get_token()
     try:
         a, b = loader.get_token(), loader.get_token()
-        if (isinstance(a, yaml.ScalarToken) and a.style is None and
-                isinstance(b, yaml.BlockEndToken) and a.value == string):
-            return False
-        return True
+        return (
+            not isinstance(a, yaml.ScalarToken)
+            or a.style is not None
+            or not isinstance(b, yaml.BlockEndToken)
+            or a.value != string
+        )
+
     except yaml.scanner.ScannerError:
         return True
 
@@ -198,7 +202,7 @@ def check(conf, token, prev, next, nextnext, context):
         return
 
     # Ignore multi-line strings
-    if (not token.plain) and (token.style == "|" or token.style == ">"):
+    if not token.plain and token.style in ["|", ">"]:
         return
 
     quote_type = conf['quote-type']
@@ -208,13 +212,13 @@ def check(conf, token, prev, next, nextnext, context):
 
         # Quotes are mandatory and need to match config
         if token.style is None or not _quote_match(quote_type, token.style):
-            msg = "string value is not quoted with %s quotes" % quote_type
+            msg = f"string value is not quoted with {quote_type} quotes"
 
     elif conf['required'] is False:
 
         # Quotes are not mandatory but when used need to match config
         if token.style and not _quote_match(quote_type, token.style):
-            msg = "string value is not quoted with %s quotes" % quote_type
+            msg = f"string value is not quoted with {quote_type} quotes"
 
         elif not token.style:
             is_extra_required = any(re.search(r, token.value)
@@ -232,12 +236,10 @@ def check(conf, token, prev, next, nextnext, context):
             is_extra_allowed = any(re.search(r, token.value)
                                    for r in conf['extra-allowed'])
             if not (is_extra_required or is_extra_allowed):
-                msg = "string value is redundantly quoted with %s quotes" % (
-                    quote_type)
+                msg = f"string value is redundantly quoted with {quote_type} quotes"
 
-        # But when used need to match config
         elif token.style and not _quote_match(quote_type, token.style):
-            msg = "string value is not quoted with %s quotes" % quote_type
+            msg = f"string value is not quoted with {quote_type} quotes"
 
         elif not token.style:
             is_extra_required = len(conf['extra-required']) and any(

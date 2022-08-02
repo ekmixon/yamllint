@@ -133,7 +133,6 @@ def check(conf, comment):
             not comment.comment_before.is_inline()):
         prev_line_indent = comment.comment_before.column_no - 1
 
-    if (comment.column_no - 1 != prev_line_indent and
-            comment.column_no - 1 != next_line_indent):
+    if comment.column_no - 1 not in [prev_line_indent, next_line_indent]:
         yield LintProblem(comment.line_no, comment.column_no,
                           'comment not indented like content')

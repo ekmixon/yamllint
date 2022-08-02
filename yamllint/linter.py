@@ -46,9 +46,7 @@ class LintProblem(object):
 
     @property
     def message(self):
-        if self.rule is not None:
-            return '{} ({})'.format(self.desc, self.rule)
-        return self.desc
+        return f'{self.desc} ({self.rule})' if self.rule is not None else self.desc
 
     def __eq__(self, other):
         return (self.line == other.line and
@@ -71,10 +69,7 @@ def get_cosmetic_problems(buffer, conf, filepath):
     comment_rules = [r for r in rules if r.TYPE == 'comment']
     line_rules = [r for r in rules if r.TYPE == 'line']
 
-    context = {}
-    for rule in token_rules:
-        context[rule.ID] = {}
-
+    context = {rule.ID: {} for rule in token_rules}
     class DisableDirective:
         def __init__(self):
             self.rules = set()
@@ -181,9 +176,12 @@ def get_syntax_error(buffer):
     try:
         list(yaml.parse(buffer, Loader=yaml.BaseLoader))
     except yaml.error.MarkedYAMLError as e:
-        problem = LintProblem(e.problem_mark.line + 1,
-                              e.problem_mark.column + 1,
-                              'syntax error: ' + e.problem + ' (syntax)')
+        problem = LintProblem(
+            e.problem_mark.line + 1,
+            e.problem_mark.column + 1,
+            f'syntax error: {e.problem} (syntax)',
+        )
+
         problem.level = 'error'
         return problem
 
